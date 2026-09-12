@@ -67,3 +67,26 @@ notification:
   mail:
     from: noreply@notification-hub.dev
     from-name: Notification Hub
+
+resilience4j:
+  retry:
+    instances:
+      emailSender:
+        max-attempts: 3
+        wait-duration: 2s
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 10s
+        retry-exceptions:
+          - java.lang.RuntimeException
+          - jakarta.mail.MessagingException
+
+  circuit-breaker:
+    instances:
+      emailSender:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true

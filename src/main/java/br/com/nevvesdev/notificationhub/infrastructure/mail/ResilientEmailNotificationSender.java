@@ -3,6 +3,8 @@ package br.com.nevvesdev.notificationhub.infrastructure.mail;
 import br.com.nevvesdev.notificationhub.application.port.out.NotificationSender;
 import br.com.nevvesdev.notificationhub.domain.enums.NotificationChannel;
 import br.com.nevvesdev.notificationhub.domain.model.Notification;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -13,9 +15,9 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EmailNotificationSender implements NotificationSender {
+public class ResilientEmailNotificationSender implements NotificationSender {
 
-    private static final Logger log = LoggerFactory.getLogger(EmailNotificationSender.class);
+    private static final Logger log = LoggerFactory.getLogger(ResilientEmailNotificationSender.class);
 
     private final JavaMailSender mailSender;
     private final TemplateRenderer templateRenderer;
@@ -26,7 +28,7 @@ public class EmailNotificationSender implements NotificationSender {
     @Value("${notification.mail.from-name}")
     private String fromName;
 
-    public EmailNotificationSender(
+    public ResilientEmailNotificationSender(
             JavaMailSender mailSender,
             TemplateRenderer templateRenderer
     ) {
@@ -40,6 +42,8 @@ public class EmailNotificationSender implements NotificationSender {
     }
 
     @Override
+    @Retry(name = "emailSender")
+    @CircuitBreaker(name = "emailSender", fallbackMethod = "fallback")
     public void send(Notification notification) {
         String htmlBody = templateRenderer.render(
                 notification.getTemplate(),
@@ -67,6 +71,19 @@ public class EmailNotificationSender implements NotificationSender {
         } catch (MessagingException | java.io.UnsupportedEncodingException e) {
             throw new RuntimeException("Failed to send email to " + notification.getRecipient(), e);
         }
+    }
+
+    // Chamado pelo Circuit Breaker quando o circuito está aberto
+    public void fallback(Notification notification, Throwable cause) {
+        log.error("Circuit breaker OPEN — email not sent id={} to={} reason={}",
+                notification.getId(),
+                notification.getRecipient(),
+                cause.getMessage());
+
+        throw new RuntimeException(
+                "Email service unavailable (circuit open) for recipient: "
+                        + notification.getRecipient(), cause
+        );
     }
 
     private String resolveSubject(Notification notification) {
