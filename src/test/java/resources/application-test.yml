@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:16:///notification_hub
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+
+  flyway:
+    enabled: false
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  thymeleaf:
+    check-template-location: false
+
+  mail:
+    host: localhost
+    port: 1025
+    username: test
+    password: test
+
+notification:
+  mail:
+    from: test@notification-hub.dev
+    from-name: Notification Hub Test
