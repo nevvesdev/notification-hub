@@ -58,10 +58,21 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,loggers
   endpoint:
     health:
       show-details: always
+      show-components: always
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: Notification Hub
+    version: 0.1.0
+    description: Microsserviço de notificações event-driven
+    java-version: "@java.version@"
 
 notification:
   mail:
@@ -90,3 +101,13 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 3
         automatic-transition-from-open-to-half-open-enabled: true
         register-health-indicator: true
+
+  logging:
+    pattern:
+      console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    level:
+      root: INFO
+      br.com.nevvesdev: DEBUG
+      org.springframework.kafka: WARN
+      org.hibernate.SQL: WARN
+      org.flywaydb: INFO
