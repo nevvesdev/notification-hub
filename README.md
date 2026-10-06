@@ -10,25 +10,25 @@ Microsserviço de notificações event-driven construído com Java 21 e Spring B
 
 ```mermaid
 graph TD
-    A["🔔 Outro Serviço"] -->|publica evento| B["Apache Kafka<br/>notifications.send"]
+    A["Outro Serviço"] -->|publica evento| B["Kafka<br/>notifications.send"]
     B -->|consome| C["KafkaNotificationListener"]
     C -->|orquestra| D["SendNotificationUseCase"]
     D -->|query template| E["NotificationTemplateRepository"]
     D -->|enriquece payload| F["Thymeleaf<br/>Template Engine"]
     F -->|renderiza HTML| G["Email Sender"]
-    G -->|@CircuitBreaker| H["Retry com<br/>Backoff Exponencial"]
+    G -->|Retry<br/>Backoff| H["Exponential Backoff<br/>Max 3 attempts"]
     H -->|sucesso| I["Spring Mail<br/>SMTP"]
-    H -->|falha permanente| J["Dead Letter Queue<br/>notifications.dlq"]
+    H -->|falha permanente| J["DLQ<br/>notifications.dlq"]
     I -->|entregue| K["destinatario@email.com"]
-    J -->|logs| L[(PostgreSQL<br/>notification_audit)]
+    J -->|logs| L["PostgreSQL<br/>notification_audit"]
     D -->|persiste auditoria| L
-    L -->|status: SENT/FAILED| M["API REST<br/>GET /notifications"]
+    L -->|status SENT/FAILED| M["API REST<br/>GET /notifications"]
     M -->|resposta| A
     
-    N["@Scheduled Job"] -->|a cada 30s| O["Processar DLQ"]
+    N["Scheduled Job"] -->|a cada 30s| O["Processar DLQ"]
     O -->|retry eventual| I
     
-    P["Spring Actuator"] -->|expõe saúde| Q["Health Indicators<br/>Kafka + DB"]
+    P["Spring Actuator"] -->|expõe| Q["Health Indicators<br/>Kafka + DB"]
     
     style B fill:#FF6B6B
     style G fill:#FFA500
