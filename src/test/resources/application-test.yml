@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/notification_hub
+    username: notif_user
+    password: notif_pass
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+  thymeleaf:
+    check-template-location: false
+
+  mail:
+    host: localhost
+    port: 1025
+    username: test
+    password: test
+
+notification:
+  mail:
+    from: test@notification-hub.dev
+    from-name: Notification Hub Test
